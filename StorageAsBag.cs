@@ -20,11 +20,8 @@ namespace PantheonStorageAsBagMod
         private static CurrencyDisplay? _currencyPlatinum;
         private static CurrencyDisplay? _currencySilver;
         private static Image? _positionLockImage;
-
-        //private static Sprite? _spriteLocked;
-        //private static Sprite? _spriteUnlocked;
+        private static UIWindowPanel? _settingsUiWindowPanel;
         private static Transform? _storage;
-
         private static GameObject? _storageBag;
         private static UICharacterPanel? _uiCharacterPanel;
         private static UIDraggable? _uiDraggable;
@@ -131,6 +128,237 @@ namespace PantheonStorageAsBagMod
 
         #region Private Methods
 
+        private static void CreateSettingsPanel(Transform midPanel)
+        {
+            if (_settingsUiWindowPanel != null)
+                return;
+
+            var fontResource = Resources
+                .FindObjectsOfTypeAll<Font>()
+                .FirstOrDefault(resourceFont => resourceFont.name.Equals("Roboto-Bold", StringComparison.OrdinalIgnoreCase));
+            var robotoBold = TMP_FontAsset.CreateFontAsset(fontResource);
+
+            var trackerSettings = new GameObject("Panel_StorageAsBagSettings");
+            trackerSettings.transform.SetParent(midPanel);
+            trackerSettings.layer = Layers.UI;
+            var trackerSettingsRect = trackerSettings.AddComponent<RectTransform>();
+            trackerSettingsRect.sizeDelta = new Vector2(240, 120);
+            trackerSettingsRect.localScale = Vector3.one;
+            trackerSettingsRect.anchorMin = new Vector2(0.5f, 0.5f);
+            trackerSettingsRect.anchorMax = new Vector2(0.5f, 0.5f);
+            trackerSettingsRect.anchoredPosition = Vector2.zero;
+            var trackerSettingsPreventMouseImage = trackerSettings.AddComponent<Image>();
+            trackerSettingsPreventMouseImage.color = new Color(0, 0, 0, 0);
+            trackerSettingsPreventMouseImage.raycastTarget = true;
+            trackerSettings.AddComponent<GraphicRaycaster>();
+            trackerSettings.AddComponent<UIDraggable>();
+            _settingsUiWindowPanel = trackerSettings.AddComponent<UIWindowPanel>();
+            var canvasGroup = trackerSettings.AddComponent<CanvasGroup>();
+            _settingsUiWindowPanel.CanvasGroup = canvasGroup;
+            _settingsUiWindowPanel._displayName = "";
+
+            // Panel background
+            var trackerSettingsBackground = new GameObject("Background");
+            trackerSettingsBackground.transform.SetParent(trackerSettings.transform);
+            var trackerSettingsBackgroundRect = trackerSettingsBackground.AddComponent<RectTransform>();
+            trackerSettingsBackgroundRect.anchoredPosition = new Vector2(1.5f, -1.5f);
+            trackerSettingsBackgroundRect.anchorMax = new Vector2(1, 1);
+            trackerSettingsBackgroundRect.anchorMin = new Vector2(0, 0);
+            trackerSettingsBackgroundRect.sizeDelta = new Vector2(-1, -1);
+            trackerSettingsBackgroundRect.localScale = Vector3.one;
+            var trackerSettingsBackgroundCanvasRenderer = trackerSettingsBackground.AddComponent<CanvasRenderer>();
+            trackerSettingsBackgroundCanvasRenderer.cullTransparentMesh = false;
+            var trackerSettingsBackgroundImage = trackerSettingsBackground.AddComponent<Image>();
+            var trackerSettingsBackgroundImageTexture = Global.LoadImageToTexture2d("InventoryBag_Bkg.png");
+            trackerSettingsBackgroundImage.sprite = Sprite.Create(trackerSettingsBackgroundImageTexture,
+                new Rect(0, 0, trackerSettingsBackgroundImageTexture.width, trackerSettingsBackgroundImageTexture.height),
+                new Vector2(0.5f, 0.5f), 100, 0, SpriteMeshType.Tight,
+                new Vector4(6, 7, 16, 14));
+            trackerSettingsBackgroundImage.type = Image.Type.Sliced;
+            var backgroundLayoutElement = trackerSettingsBackground.AddComponent<LayoutElement>();
+            backgroundLayoutElement.ignoreLayout = true;
+
+            // Close button of the background
+            var backgroundCancelButton = new GameObject("CancelButton");
+            backgroundCancelButton.transform.SetParent(trackerSettingsBackground.transform, false);
+            var backgroundCancelRect = backgroundCancelButton.AddComponent<RectTransform>();
+            backgroundCancelRect.anchoredPosition = new Vector2(-14f, -13f);
+            backgroundCancelRect.anchorMax = new Vector2(1f, 1f);
+            backgroundCancelRect.anchorMin = new Vector2(1f, 1f);
+            backgroundCancelRect.sizeDelta = new Vector2(30f, 30f);
+            backgroundCancelRect.localScale = Vector3.one;
+            var backgroundCancelRenderer = backgroundCancelButton.AddComponent<CanvasRenderer>();
+            backgroundCancelRenderer.cullTransparentMesh = false;
+            var backgroundCancelButtonImage = backgroundCancelButton.AddComponent<Image>();
+            var backgroundCancelButtonTexture = Global.LoadImageToTexture2d("CodexCloseBtn.png");
+            backgroundCancelButtonImage.sprite = Sprite.Create(backgroundCancelButtonTexture,
+                new Rect(0, 0, backgroundCancelButtonTexture.width, backgroundCancelButtonTexture.height),
+                new Vector2(0.5f, 0.5f));
+            var cancelButton = backgroundCancelButton.AddComponent<Button>();
+            cancelButton.onClick.AddListener(new Action(() =>
+            {
+                Global.StorageAsBagCategory.SaveToFile();
+                _settingsUiWindowPanel.Hide();
+            }));
+            var backgroundCancelLayoutElement = backgroundCancelButton.AddComponent<LayoutElement>();
+            backgroundCancelLayoutElement.ignoreLayout = true;
+
+            // Panel title
+            var settingsTitle = new GameObject("Title");
+            settingsTitle.transform.SetParent(trackerSettingsBackground.transform);
+            var settingsTitleRect = settingsTitle.AddComponent<RectTransform>();
+            settingsTitleRect.anchoredPosition = new Vector2(0, -12);
+            settingsTitleRect.anchorMax = new Vector2(0.5f, 1);
+            settingsTitleRect.anchorMin = new Vector2(0.5f, 1);
+            settingsTitleRect.pivot = new Vector2(0.5f, 1);
+            settingsTitleRect.sizeDelta = Vector2.zero;
+            settingsTitleRect.localScale = Vector3.one;
+            var settingsTitleFirstRow = new GameObject("First");
+            settingsTitleFirstRow.transform.SetParent(settingsTitle.transform);
+            var settingsTitleFirstRowRect = settingsTitleFirstRow.AddComponent<RectTransform>();
+            settingsTitleFirstRowRect.anchoredPosition = Vector2.zero;
+            settingsTitleFirstRowRect.anchorMax = Vector2.one;
+            settingsTitleFirstRowRect.anchorMin = Vector2.zero;
+            settingsTitleFirstRowRect.pivot = new Vector2(0.5f, 1);
+            settingsTitleFirstRowRect.localScale = Vector3.one;
+            var storageAsBagText = settingsTitleFirstRow.AddComponent<TextMeshProUGUI>();
+            storageAsBagText.text = "Storage As Bag";
+            storageAsBagText.fontSize = 14;
+            storageAsBagText.fontStyle = FontStyles.Bold;
+            storageAsBagText.color = new Color(250f / 255, 212f / 255, 13f / 255, 1);
+            storageAsBagText.font = robotoBold!;
+            settingsTitleFirstRowRect.sizeDelta = new Vector2(storageAsBagText.preferredWidth, 0);
+            var settingsTitleSecondRow = new GameObject("Second");
+            settingsTitleSecondRow.transform.SetParent(settingsTitle.transform);
+            var settingsTitleSecondRowRect = settingsTitleSecondRow.AddComponent<RectTransform>();
+            settingsTitleSecondRowRect.anchoredPosition = new Vector2(0, -20);
+            settingsTitleSecondRowRect.anchorMax = Vector2.one;
+            settingsTitleSecondRowRect.anchorMin = Vector2.zero;
+            settingsTitleSecondRowRect.pivot = new Vector2(0.5f, 1);
+            settingsTitleSecondRowRect.localScale = Vector3.one;
+            var settingsTitleText = settingsTitleSecondRow.AddComponent<TextMeshProUGUI>();
+            settingsTitleText.text = "Settings";
+            settingsTitleText.fontSize = 14;
+            settingsTitleText.fontStyle = FontStyles.Bold;
+            settingsTitleText.color = new Color(250f / 255, 212f / 255, 13f / 255, 1);
+            settingsTitleText.font = robotoBold!;
+            settingsTitleSecondRowRect.sizeDelta = new Vector2(settingsTitleText.preferredWidth, 0);
+
+            var settingsContainer = new GameObject("Settings Container");
+            settingsContainer.transform.SetParent(trackerSettings.transform);
+            var settingsContainerRect = settingsContainer.AddComponent<RectTransform>();
+            settingsContainerRect.anchoredPosition = new Vector2(0, -65);
+            settingsContainerRect.anchorMax = Vector2.one;
+            settingsContainerRect.anchorMin = new Vector2(0, 0.5f);
+            settingsContainerRect.pivot = new Vector2(0.5f, 0.5f);
+            settingsContainerRect.sizeDelta = Vector2.zero;
+            settingsContainerRect.localScale = Vector3.one;
+
+            var scale = Global.StorageAsBagCategory.GetEntry<float>(Global.StorageAsBagCategoryScale).Value;
+
+            var scaleSettingGroup = new GameObject("Scale Setting");
+            scaleSettingGroup.transform.SetParent(settingsContainer.transform);
+            var scaleSettingGroupRect = scaleSettingGroup.AddComponent<RectTransform>();
+            scaleSettingGroupRect.anchoredPosition = new Vector2(0, -20);
+            scaleSettingGroupRect.anchorMax = Vector2.up;
+            scaleSettingGroupRect.anchorMin = Vector2.up;
+            scaleSettingGroupRect.pivot = Vector2.up;
+            scaleSettingGroupRect.localScale = Vector3.one;
+
+            var scaleSettingTitle = new GameObject("Title");
+            scaleSettingTitle.transform.SetParent(scaleSettingGroup.transform);
+            var scaleSettingTitleRect = scaleSettingTitle.AddComponent<RectTransform>();
+            scaleSettingTitleRect.anchoredPosition = new Vector2(70, 45);
+            scaleSettingTitleRect.anchorMax = new Vector2(0.5f, 0.5f);
+            scaleSettingTitleRect.anchorMin = new Vector2(0.5f, 0.5f);
+            scaleSettingTitleRect.pivot = new Vector2(0.5f, 0.5f);
+            scaleSettingTitleRect.localScale = Vector3.one;
+            var scaleSettingTitleText = scaleSettingTitle.AddComponent<TextMeshProUGUI>();
+            scaleSettingTitleText.text = $"Scale: {scale}";
+            scaleSettingTitleText.fontSize = 12;
+            scaleSettingTitleText.fontStyle = FontStyles.Bold;
+            scaleSettingTitleText.color = new Color(1, 1, 1, 1);
+            scaleSettingTitleText.font = robotoBold!;
+
+            var scaleSetting = new GameObject("Scale Slider");
+            scaleSetting.transform.SetParent(scaleSettingGroup.transform);
+            var scaleSettingSliderRect = scaleSetting.AddComponent<RectTransform>();
+            scaleSettingSliderRect.anchoredPosition = new Vector2(70, 45);
+            scaleSettingSliderRect.anchorMax = new Vector2(0.5f, 0.5f);
+            scaleSettingSliderRect.anchorMin = new Vector2(0.5f, 0.5f);
+            scaleSettingSliderRect.pivot = new Vector2(0.5f, 0.5f);
+            scaleSettingSliderRect.localScale = Vector3.one;
+            scaleSettingSliderRect.sizeDelta = new Vector2(200, 20);
+            var scaleSlider = scaleSetting.AddComponent<Slider>();
+            scaleSlider.maxValue = 150;
+            scaleSlider.minValue = 50;
+            scaleSlider.normalizedValue = 0.7f;
+            scaleSlider.value = scale;
+            scaleSlider.wholeNumbers = true;
+            scaleSlider.onValueChanged.AddListener(new Action<float>(_ => ScaleSettingChanged(scaleSlider, scaleSettingTitleText)));
+
+            var scaleSliderBackground = new GameObject("Background");
+            scaleSliderBackground.transform.SetParent(scaleSetting.transform);
+            var scaleSliderBackgroundRect = scaleSliderBackground.AddComponent<RectTransform>();
+            scaleSliderBackgroundRect.anchoredPosition = Vector2.zero;
+            scaleSliderBackgroundRect.anchorMax = new Vector2(1, 0.75f);
+            scaleSliderBackgroundRect.anchorMin = new Vector2(0, 0.25f);
+            scaleSliderBackgroundRect.pivot = new Vector2(0.5f, 0.5f);
+            scaleSliderBackgroundRect.localScale = Vector3.one;
+            scaleSliderBackgroundRect.sizeDelta = Vector2.zero;
+            var scaleSliderBackgroundImage = scaleSliderBackground.AddComponent<Image>();
+            scaleSliderBackgroundImage.color = new Color(1, 1, 1, 1);
+
+            var scaleSliderFillArea = new GameObject("Fill Area");
+            scaleSliderFillArea.transform.SetParent(scaleSetting.transform);
+            var scaleSliderFillAreaRect = scaleSliderFillArea.AddComponent<RectTransform>();
+            scaleSliderFillAreaRect.anchoredPosition = new Vector2(-5, 0);
+            scaleSliderFillAreaRect.anchorMax = new Vector2(1, 0.75f);
+            scaleSliderFillAreaRect.anchorMin = new Vector2(0, 0.25f);
+            scaleSliderFillAreaRect.pivot = new Vector2(0.5f, 0.5f);
+            scaleSliderFillAreaRect.localScale = Vector3.one;
+            scaleSliderFillAreaRect.sizeDelta = new Vector2(-20, 0);
+            var scaleSliderFillAreaFill = new GameObject("Fill");
+            scaleSliderFillAreaFill.transform.SetParent(scaleSliderFillArea.transform);
+            var scaleSliderFillAreaFillRect = scaleSliderFillAreaFill.AddComponent<RectTransform>();
+            scaleSliderFillAreaFillRect.anchoredPosition = Vector2.zero;
+            scaleSliderFillAreaFillRect.anchorMax = new Vector2(0.51f, 1);
+            scaleSliderFillAreaFillRect.anchorMin = Vector2.zero;
+            scaleSliderFillAreaFillRect.pivot = new Vector2(0.5f, 0.5f);
+            scaleSliderFillAreaFillRect.localScale = Vector3.one;
+            scaleSliderFillAreaFillRect.sizeDelta = new Vector2(10, 0);
+            var scaleSliderFillAreaFillImage = scaleSliderFillAreaFill.AddComponent<Image>();
+            scaleSliderFillAreaFillImage.color = new Color(1, 1, 1, 1);
+            scaleSlider.fillRect = scaleSliderFillAreaFillRect;
+
+            var scaleSliderHandle = new GameObject("Handle");
+            scaleSliderHandle.transform.SetParent(scaleSetting.transform);
+            var scaleSliderHandleRect = scaleSliderHandle.AddComponent<RectTransform>();
+            scaleSliderHandleRect.anchoredPosition = Vector2.zero;
+            scaleSliderHandleRect.anchorMax = Vector2.one;
+            scaleSliderHandleRect.anchorMin = Vector2.zero;
+            scaleSliderHandleRect.pivot = new Vector2(0.5f, 0.5f);
+            scaleSliderHandleRect.localScale = Vector3.one;
+            scaleSliderHandleRect.sizeDelta = new Vector2(-20, 0);
+            var scaleSliderHandleHandle = new GameObject("Handle");
+            scaleSliderHandleHandle.transform.SetParent(scaleSliderHandle.transform);
+            var scaleSliderHandleHandleRect = scaleSliderHandleHandle.AddComponent<RectTransform>();
+            scaleSliderHandleHandleRect.anchoredPosition = Vector2.zero;
+            scaleSliderHandleHandleRect.anchorMax = new Vector2(0.51f, 1);
+            scaleSliderHandleHandleRect.anchorMin = new Vector2(0.51f, 0);
+            scaleSliderHandleHandleRect.pivot = new Vector2(0.5f, 0.5f);
+            scaleSliderHandleHandleRect.sizeDelta = new Vector2(10, 0);
+            scaleSliderHandleHandleRect.localScale = Vector3.one;
+            var scaleSliderHandleHandleImage = scaleSliderHandleHandle.AddComponent<Image>();
+            var scaleSliderHandleHandleTexture = Global.LoadImageToTexture2d("ScrollBarVertical.png");
+            scaleSliderHandleHandleImage.sprite = Sprite.Create(scaleSliderHandleHandleTexture,
+                new Rect(0, 0, scaleSliderHandleHandleTexture.width, scaleSliderHandleHandleTexture.height),
+                new Vector2(0.5f, 0.5f));
+            scaleSlider.handleRect = scaleSliderHandleHandleRect;
+            scaleSlider.image = scaleSliderHandleHandleImage;
+            scaleSlider.targetGraphic = scaleSliderHandleHandleImage;
+        }
+
         /// <summary>
         /// Creates the main panel for the storage bag
         /// </summary>
@@ -151,7 +379,8 @@ namespace PantheonStorageAsBagMod
             var storageBagRect = _storageBag.AddComponent<RectTransform>();
             storageBagRect.anchoredPosition = Global.StorageAsBagCategory.GetEntry<Vector2>(Global.StorageAsBagCategoryBagAnchoredPosition).Value;
             storageBagRect.sizeDelta = new Vector2(212, 147.2f);
-            storageBagRect.localScale = new Vector3(1, 1, 1);
+            var scale = Global.StorageAsBagCategory.GetEntry<float>(Global.StorageAsBagCategoryScale).Value;
+            storageBagRect.localScale = new Vector3(scale / 100, scale / 100, scale / 100);
 
             // prevent mouse from clicking through the bag
             var storagePreventMouseImage = _storageBag.AddComponent<Image>();
@@ -198,6 +427,26 @@ namespace PantheonStorageAsBagMod
             _positionLockImage.preserveAspect = true;
             var toggleButton = toggleObject.AddComponent<Button>();
             toggleButton.onClick.AddListener(new Action(LockTogglePosition));
+
+            // Settings button
+            var settingsButton = new GameObject("Settings Button");
+            settingsButton.transform.SetParent(storageBagBackground.transform);
+            var settingsButtonRect = settingsButton.AddComponent<RectTransform>();
+            settingsButtonRect.anchoredPosition = new Vector2(-35, -13.5f);
+            settingsButtonRect.anchorMax = new Vector2(1, 1);
+            settingsButtonRect.anchorMin = new Vector2(1, 1);
+            settingsButtonRect.sizeDelta = new Vector2(13, 13);
+            settingsButtonRect.localScale = new Vector3(1, 1, 1);
+            var settingsButtonRenderer = settingsButton.AddComponent<CanvasRenderer>();
+            settingsButtonRenderer.cullTransparentMesh = false;
+            var settingsButtonImage = settingsButton.AddComponent<Image>();
+            var settingsButtonTexture = Global.LoadImageToTexture2d("settings.png");
+            settingsButtonTexture.filterMode = FilterMode.Point;
+            settingsButtonImage.sprite = Sprite.Create(settingsButtonTexture, new Rect(0, 0, settingsButtonTexture.width, settingsButtonTexture.height), new Vector2(0.5f, 0.5f));
+            var settingsButtonButton = settingsButton.AddComponent<Button>();
+            settingsButtonButton.onClick.AddListener(new Action(OpenSettingsPanelToggle));
+            var settingsButtonLayoutElement = settingsButton.AddComponent<LayoutElement>();
+            settingsButtonLayoutElement.ignoreLayout = true;
 
             // Close button object of the background
             var backgroundCancelButton = new GameObject("CancelButton");
@@ -399,6 +648,20 @@ namespace PantheonStorageAsBagMod
             EnableUiDraggable(!currentSetting);
         }
 
+        private static void OpenSettingsPanelToggle()
+        {
+            if (_settingsUiWindowPanel == null)
+                return;
+
+            if (_settingsUiWindowPanel.IsVisible)
+            {
+                _settingsUiWindowPanel.Hide();
+                Global.StorageAsBagCategory.SaveToFile();
+            }
+            else
+                _settingsUiWindowPanel.Show();
+        }
+
         /// <summary>
         /// HarmonyPatch Postfix for UICharacterPanel.Awake. This is the first thing called in this class.
         /// It will then set up all the ui elements needed for the storage bag.
@@ -407,11 +670,29 @@ namespace PantheonStorageAsBagMod
         private static void Postfix(UICharacterPanel __instance)
         {
             _uiCharacterPanel = __instance;
-            _storage = _uiCharacterPanel.transform.Find("LeftTabs").Find("Tabs Content").Find("Adventuring").Find("[Overview Panel]").Find("Storage");
+            _storage = _uiCharacterPanel.transform
+                .Find("LeftTabs")
+                .Find("Tabs Content")
+                .Find("Adventuring")
+                .Find("[Overview Panel]")
+                .Find("Storage");
 
             SetupButtonToOpenStorageAsBag();
             CreateStorageCover();
             CreateStorageBag();
+            CreateSettingsPanel(_uiCharacterPanel.transform.parent);
+        }
+
+        private static void ScaleSettingChanged(Slider slider, TextMeshProUGUI text)
+        {
+            var sliderValue = slider.value;
+            text.text = $"Scale: {sliderValue}";
+            Global.StorageAsBagCategory.GetEntry<float>(Global.StorageAsBagCategoryScale).Value = sliderValue;
+
+            if (_storageBag == null)
+                return;
+
+            _storageBag.GetComponent<RectTransform>().localScale = new Vector3(sliderValue / 100, sliderValue / 100, sliderValue / 100);
         }
 
         /// <summary>

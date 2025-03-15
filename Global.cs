@@ -17,6 +17,7 @@ namespace PantheonStorageAsBagMod
         public static string StorageAsBagCategoryBagAnchoredPosition = "BagAnchoredPosition";
         public static string StorageAsBagCategoryBagEnabled = "InventoryAsBagEnabled";
         public static string StorageAsBagCategoryLockPosition = "LockStorageBagPosition";
+        public static string StorageAsBagCategoryScale = "StorageBagScale";
         public static string StorageAsBagCategoryStorageAnchorPosition = "StorageInventoryAnchoredPosition";
 
         #endregion Public Fields

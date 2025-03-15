@@ -17,6 +17,7 @@ namespace PantheonStorageAsBagMod
             Global.StorageAsBagCategory.CreateEntry(Global.StorageAsBagCategoryBagEnabled, false);
             Global.StorageAsBagCategory.CreateEntry(Global.StorageAsBagCategoryBagAnchoredPosition, new Vector2(0, 0));
             Global.StorageAsBagCategory.CreateEntry(Global.StorageAsBagCategoryLockPosition, false);
+            Global.StorageAsBagCategory.CreateEntry(Global.StorageAsBagCategoryScale, 100f);
             Global.StorageAsBagCategory.SaveToFile();
         }
 
