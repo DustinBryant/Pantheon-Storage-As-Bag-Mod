@@ -60,7 +60,7 @@ namespace PantheonStorageAsBagMod
         public static void SetAndSavePreference<T>(this MelonPreferences_Category category, string entryName, T value)
         {
             category.GetEntry<T>(entryName).Value = value;
-            category.SaveToFile();
+            category.SaveToFile(false);
         }
 
         #endregion Public Methods
