@@ -391,6 +391,8 @@ namespace PantheonStorageAsBagMod
             // Add window panel components
             _uiDraggable = _storageBag.AddComponent<UIDraggable>();
             _uiWindowPanel = _storageBag.AddComponent<UIWindowPanel>();
+            _uiDraggable._windowPanel = _uiWindowPanel;
+            
             var canvasGroup = _storageBag.AddComponent<CanvasGroup>();
             _storageBag.AddComponent<BagPositionSaver>();
             _uiWindowPanel.CanvasGroup = canvasGroup;
